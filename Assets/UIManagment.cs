@@ -4,11 +4,10 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Threading;
 
 public class UIManagment : MonoBehaviour
-{
-
-    
+{ 
     [SerializeField] TextMeshProUGUI _categoryText;
     [SerializeField] TextMeshProUGUI _questionText;
     
@@ -23,6 +22,8 @@ public class UIManagment : MonoBehaviour
     public bool queryCalled;
 
     private Color _originalButtonColor;
+
+    private bool _isCorrectSelection;
 
     public static UIManagment Instance { get; private set; }
 
@@ -42,7 +43,6 @@ public class UIManagment : MonoBehaviour
 
     }
 
-
     private void Start()
     {
         queryCalled = false;
@@ -57,7 +57,7 @@ public class UIManagment : MonoBehaviour
         _questionText.text = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].QuestionText;
 
         GameManager.Instance.CategoryAndQuestionQuery(queryCalled);
-
+        Debug.Log(GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].CorrectOption);
     }
     public void OnButtonClick(int buttonIndex)
     {
@@ -66,24 +66,31 @@ public class UIManagment : MonoBehaviour
 
         _correctAnswer = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].CorrectOption;
 
-        if (selectedAnswer == _correctAnswer)
+        if (selectedAnswer == GameManager.Instance._correctAnswer)
         {
+            _isCorrectSelection = true;
+            DisableButtons();
             Debug.Log("¡Respuesta correcta!");
+            GameManager.Instance.Points += 1;
+            //Setear UI
+
             ChangeButtonColor(buttonIndex, Color.green);
             Invoke("RestoreButtonColor", 2f);
             GameManager.Instance._answers.Clear();
             Invoke("NextAnswer", 2f);
-            
+            Invoke("ExecuteEndGame", 1f);
         }
         else
         {
+            _isCorrectSelection = false;
+            _buttons[buttonIndex].interactable = false;
             Debug.Log("Respuesta incorrecta. Inténtalo de nuevo.");
-            
             ChangeButtonColor(buttonIndex, Color.red);
-            Invoke("RestoreButtonColor", 2f);
+            Invoke("ExecuteEndGame", 1f);
         }
 
-
+        GameManager.Instance._numQuestionAnswered++;
+        Debug.Log(GameManager.Instance.Points);
     }
 
     private void ChangeButtonColor(int buttonIndex, Color color)
@@ -101,9 +108,26 @@ public class UIManagment : MonoBehaviour
         }
     }
 
+    private void EnableButtons()
+    {
+        foreach (var button in _buttons)
+        {
+            button.interactable = true;
+        }
+    }
+
+    private void DisableButtons()
+    {
+        foreach (var button in _buttons)
+        {
+            button.interactable = false;
+        }
+    }
+
     private void NextAnswer()
     {
         queryCalled = false;
+        EnableButtons();
     }
 
     public void PreviousScene()
@@ -114,5 +138,26 @@ public class UIManagment : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
     }
 
+    public void DestroyInstance()
+    {
+        if (Instance == this)
+        {
+            Instance = null; // Limpia la referencia estática
+            Destroy(gameObject); // Destruye el objeto del juego
+        }
+    }
 
+    private void ExecuteEndGame()
+    {
+        if (_isCorrectSelection && GameManager.Instance.AllQuestionsAnswered())
+        {
+            GameManager.Instance.EndGame(true);
+        } 
+        else if (!_isCorrectSelection)
+        {
+            GameManager.Instance.EndGame(false);
+        }
+
+        return;
+    }
 }

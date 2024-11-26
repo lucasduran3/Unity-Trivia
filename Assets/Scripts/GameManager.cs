@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -22,7 +23,11 @@ public class GameManager : MonoBehaviour
 
     public int _numQuestionAnswered = 0;
 
-    string _correctAnswer;
+    public string _correctAnswer;
+
+    public GameResult currentGameResult;
+
+    private List<int> _usedQuestions = new List<int>();
 
     public static GameManager Instance { get; private set; }
 
@@ -42,7 +47,6 @@ public class GameManager : MonoBehaviour
 
     }
 
-
     void Start()
     {
 
@@ -58,7 +62,9 @@ public class GameManager : MonoBehaviour
         //triviaManager.LoadTrivia(currentTriviaIndex);
 
         //print(responseList.Count);
-
+        _points = 0;
+        _numQuestionAnswered = 0;
+        _usedQuestions.Clear();
     }
 
     public void CategoryAndQuestionQuery(bool isCalled)
@@ -67,43 +73,84 @@ public class GameManager : MonoBehaviour
 
         if (!isCalled)
         {
+            do
+            {
+                randomQuestionIndex = Random.Range(0, responseList.Count);
+            }
+            while (_usedQuestions.Contains(randomQuestionIndex));
 
-            randomQuestionIndex = Random.Range(0, GameManager.Instance.responseList.Count);
+            _usedQuestions.Add(randomQuestionIndex);
+            // Obtén el índice original de la respuesta correcta
+            int correctIndex = int.Parse(responseList[randomQuestionIndex].CorrectOption);
 
-            //_questionText.text = GameManager.Instance.responseList[randomQuestionIndex].QuestionText;
-            _correctAnswer = GameManager.Instance.responseList[randomQuestionIndex].CorrectOption;
+            // Limpia respuestas anteriores
+            _answers.Clear();
 
-            //agrego a la lista de answers las 3 answers
+            // Agrega respuestas en orden original
+            _answers.Add(responseList[randomQuestionIndex].Answer1);
+            _answers.Add(responseList[randomQuestionIndex].Answer2);
+            _answers.Add(responseList[randomQuestionIndex].Answer3);
 
-            _answers.Add(GameManager.Instance.responseList[randomQuestionIndex].Answer1);
-            _answers.Add(GameManager.Instance.responseList[randomQuestionIndex].Answer2);
-            _answers.Add(GameManager.Instance.responseList[randomQuestionIndex].Answer3);
+            // Guarda el texto de la respuesta correcta antes de mezclar
+            string correctAnswerText = _answers[correctIndex - 1]; // -1 porque los índices de CorrectOption son 1-based
 
-            // la mixeo con el método Shuffle (ver script Shuffle List)
-
+            // Mezcla las respuestas
             _answers.Shuffle();
 
-            // asigno estos elementos a los textos de los botones
+            // Actualiza el texto de la respuesta correcta después de mezclar
+            _correctAnswer = correctAnswerText;
 
+            // Asigna las respuestas mezcladas a los botones
             for (int i = 0; i < UIManagment.Instance._buttons.Length; i++)
             {
                 UIManagment.Instance._buttons[i].GetComponentInChildren<TextMeshProUGUI>().text = _answers[i];
 
-                int index = i; // Captura el valor actual de i en una variable local -- SINO NO FUNCA!
-
+                int index = i; // Captura el índice local
+                UIManagment.Instance._buttons[i].onClick.RemoveAllListeners(); // Limpia listeners anteriores
                 UIManagment.Instance._buttons[i].onClick.AddListener(() => UIManagment.Instance.OnButtonClick(index));
             }
 
-
             UIManagment.Instance.queryCalled = true;
         }
-
     }
 
-
-    private void Update()
+    public bool AllQuestionsAnswered()
     {
-        
+        return _numQuestionAnswered == responseList.Count;
+    }
+    
+    public void EndGame(bool isWin)
+    {
+        currentGameResult = isWin ? GameResult.Win : GameResult.Lose;
+        StartScene("FinishGame");
+    }
+
+    public void StartScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
+
+    public void DestroyInstance()
+    {
+        if (Instance == this)
+        {
+            Instance = null; // Limpia la referencia estática
+            Destroy(gameObject); // Destruye el objeto del juego
+        }
+    }
+
+    //Properties
+    public int Points
+    {
+        get => _points;
+        set => _points = value;
+    }
+
+    //enum
+    public enum GameResult
+    {
+        Win,
+        Lose
     }
 }
 
