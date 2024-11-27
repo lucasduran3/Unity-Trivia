@@ -32,6 +32,10 @@ public class FinishGameManager : MonoBehaviour
         {
             UIManagment.Instance.DestroyInstance();
         }
+        if (TimerController.Instance != null)
+        {
+            TimerController.Instance.DestroyInstance();
+        }
         SceneManager.LoadScene("TriviaSelectScene");
     }
 

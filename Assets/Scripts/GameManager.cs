@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviour
 
     private List<int> _usedQuestions = new List<int>();
 
+    private TimerController _timerController;
+
     public static GameManager Instance { get; private set; }
 
 
@@ -45,6 +47,7 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+        _timerController = GameObject.FindWithTag("Timer").GetComponent<TimerController>();
     }
 
     void Start()
@@ -109,9 +112,9 @@ public class GameManager : MonoBehaviour
                 UIManagment.Instance._buttons[i].onClick.RemoveAllListeners(); // Limpia listeners anteriores
                 UIManagment.Instance._buttons[i].onClick.AddListener(() => UIManagment.Instance.OnButtonClick(index));
             }
-
+            _timerController.StartTimer();
             UIManagment.Instance.queryCalled = true;
-        }
+        } 
     }
 
     public bool AllQuestionsAnswered()
@@ -134,8 +137,8 @@ public class GameManager : MonoBehaviour
     {
         if (Instance == this)
         {
-            Instance = null; // Limpia la referencia estática
-            Destroy(gameObject); // Destruye el objeto del juego
+            Instance = null;
+            Destroy(gameObject);
         }
     }
 

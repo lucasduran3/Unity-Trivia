@@ -10,6 +10,7 @@ public class UIManagment : MonoBehaviour
 { 
     [SerializeField] TextMeshProUGUI _categoryText;
     [SerializeField] TextMeshProUGUI _questionText;
+    [SerializeField] TextMeshProUGUI _timerText;
     
     string _correctAnswer;
 
@@ -61,7 +62,8 @@ public class UIManagment : MonoBehaviour
     }
     public void OnButtonClick(int buttonIndex)
     {
-        
+        TimerController.Instance.StopTimer();
+
         string selectedAnswer = _buttons[buttonIndex].GetComponentInChildren<TextMeshProUGUI>().text;
 
         _correctAnswer = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].CorrectOption;
@@ -91,6 +93,11 @@ public class UIManagment : MonoBehaviour
 
         GameManager.Instance._numQuestionAnswered++;
         Debug.Log(GameManager.Instance.Points);
+    }
+
+    public void UpdateTimerText(int second)
+    {
+        _timerText.text = $"Timer: {second}";
     }
 
     private void ChangeButtonColor(int buttonIndex, Color color)
