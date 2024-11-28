@@ -10,25 +10,24 @@ using UnityEngine.SceneManagement;
 
 public class TriviaSelection : MonoBehaviour
 {
-    string supabaseUrl = "https://iwdrxfxeosvebxwayxfh.supabase.co"; //COMPLETAR
-    string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZHJ4Znhlb3N2ZWJ4d2F5eGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyMjE1MDEsImV4cCI6MjA0Nzc5NzUwMX0.l_3eGWD_kVqEd8E64f9kArIEsedViSiw5Q1hc6NpKZ4"; //COMPLETAR
+    protected string supabaseUrl = "https://iwdrxfxeosvebxwayxfh.supabase.co"; //COMPLETAR
+    protected string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZHJ4Znhlb3N2ZWJ4d2F5eGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyMjE1MDEsImV4cCI6MjA0Nzc5NzUwMX0.l_3eGWD_kVqEd8E64f9kArIEsedViSiw5Q1hc6NpKZ4"; //COMPLETAR
 
-    Supabase.Client clientSupabase;
+    protected Supabase.Client clientSupabase;
 
-    List<trivia> trivias = new List<trivia>();
-    [SerializeField] TMP_Dropdown _dropdown;
+    public static List<trivia> trivias = new List<trivia>();
+    [SerializeField] protected TMP_Dropdown _dropdown;
 
     public DatabaseManager databaseManager;
 
-    async void Start()
+    protected virtual async void Start()
     {
         clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
-
         await SelectTrivias();
         PopulateDropdown();
     }
 
-    async Task SelectTrivias()
+    protected virtual async Task SelectTrivias()
     {
         var response = await clientSupabase
             .From<trivia>()
@@ -38,18 +37,11 @@ public class TriviaSelection : MonoBehaviour
         if (response != null)
         {
             trivias = response.Models;
-            //Debug.Log("Trivias seleccionadas: " + trivias.Count);
-            //foreach (var trivia in trivias)
-            //{
-            //    Debug.Log("ID: " + trivia.id + ", Categoría: " + trivia.category);
-            //}
         }
-
     }
 
-    void PopulateDropdown()
-    {
-        
+    protected virtual void PopulateDropdown()
+    {   
         _dropdown.ClearOptions();
 
         List<string> categories = new List<string>();
@@ -71,7 +63,7 @@ public class TriviaSelection : MonoBehaviour
         PlayerPrefs.SetString("SelectedTrivia", selectedTrivia);
 
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        SceneManager.LoadScene("Main");
     }
 
 }

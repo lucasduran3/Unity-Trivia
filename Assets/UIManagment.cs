@@ -4,13 +4,13 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System.Threading;
 
 public class UIManagment : MonoBehaviour
 { 
     [SerializeField] TextMeshProUGUI _categoryText;
     [SerializeField] TextMeshProUGUI _questionText;
     [SerializeField] TextMeshProUGUI _timerText;
+    [SerializeField] TextMeshProUGUI _pointsText;
     
     string _correctAnswer;
 
@@ -58,7 +58,6 @@ public class UIManagment : MonoBehaviour
         _questionText.text = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].QuestionText;
 
         GameManager.Instance.CategoryAndQuestionQuery(queryCalled);
-        Debug.Log(GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].CorrectOption);
     }
     public void OnButtonClick(int buttonIndex)
     {
@@ -72,9 +71,9 @@ public class UIManagment : MonoBehaviour
         {
             _isCorrectSelection = true;
             DisableButtons();
-            Debug.Log("¡Respuesta correcta!");
-            GameManager.Instance.Points += 1;
-            //Setear UI
+            GameManager.Instance.CalculatePoints();
+            UpdatePointsText();
+            //setear UI puntos
 
             ChangeButtonColor(buttonIndex, Color.green);
             Invoke("RestoreButtonColor", 2f);
@@ -154,15 +153,20 @@ public class UIManagment : MonoBehaviour
         }
     }
 
+    private void UpdatePointsText()
+    {
+        _pointsText.text = $"Puntos: {GameManager.Instance.Points}";
+    }
+
     private void ExecuteEndGame()
     {
         if (_isCorrectSelection && GameManager.Instance.AllQuestionsAnswered())
         {
-            GameManager.Instance.EndGame(true);
+            GameManager.Instance.EndGame(GameResult.WIN);
         } 
         else if (!_isCorrectSelection)
         {
-            GameManager.Instance.EndGame(false);
+            GameManager.Instance.EndGame(GameResult.LOSE_BY_ANSWER);
         }
 
         return;

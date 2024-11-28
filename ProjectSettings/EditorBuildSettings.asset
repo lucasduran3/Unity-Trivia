@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: 81399a43eda60b44382fcd166ec371cf
+  - enabled: 1
     path: Assets/Scenes/TriviaSelectScene.unity
     guid: b0b58ca4d5f6a7146b7bb4d12583a58d
   - enabled: 1
@@ -14,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/FinishGame.unity
     guid: 53470f86c2be9004282c9ab72e95055c
+  - enabled: 1
+    path: Assets/Scenes/RankingScene.unity
+    guid: 44a42a926073598408d8e6ce6cd9e382
   m_configObjects: {}

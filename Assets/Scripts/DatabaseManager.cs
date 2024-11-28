@@ -4,6 +4,12 @@ using Supabase.Interfaces;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Postgrest.Models;
+using System.Linq;
+using Unity.VisualScripting;
+using Postgrest.Responses;
+using System;
+using Newtonsoft.Json;
+using Postgrest.Exceptions;
 
 public class DatabaseManager : MonoBehaviour
 {
@@ -12,11 +18,9 @@ public class DatabaseManager : MonoBehaviour
 
     Supabase.Client clientSupabase;
 
+    public static event Action<List<Ranking>> OnRankingLoaded;
+
     public int index;
-
-    //UI
-    [SerializeField] private 
-
 
     async void Start()
     {
@@ -24,7 +28,8 @@ public class DatabaseManager : MonoBehaviour
         
         index = PlayerPrefs.GetInt("SelectedIndex");
 
-        //print(_selectedTrivia);
+        GameManager.OnGameEnd += HandleGameEnd;
+        RankingSceneManager.OnSelectCategory += HandleSelectCategory;
 
         await LoadTriviaData(index);
     }
@@ -43,10 +48,83 @@ public class DatabaseManager : MonoBehaviour
 
         print("Response from query: "+ response.Models.Count);
         print("ResponseList from GM: "+ GameManager.Instance.responseList.Count);
-
-    
-
-
     }
 
+    private async Task LoadGeneralRanking()
+    {
+        try
+        {
+            var response = await clientSupabase.Postgrest.Rpc("get_general_ranking", null);
+
+            if (response != null && response.Content != null)
+            {
+                var rankings = JsonConvert.DeserializeObject<List<Ranking>>(response.Content);
+                OnRankingLoaded?.Invoke(rankings);
+
+                foreach (var item in rankings)
+                {
+                    Debug.Log("Id de trivia en general " + item.category);
+                }
+            }
+        }
+        catch (PostgrestException e)
+        {
+            Debug.LogError($"Error en LoadGeneralRanking: {e.Message}");
+        }
+    }
+
+    private async Task LoadCategoryRanking(int triviaId)
+    {
+        var response = await clientSupabase
+            .From<Ranking>()
+            .Where(r => r.trivia_id == triviaId)
+            .Order("points", Postgrest.Constants.Ordering.Descending, Postgrest.Constants.NullPosition.First)
+            .Select("*")
+            .Get();
+
+        if (response != null)
+        {
+            foreach (var item in response.Models)
+            {
+                Debug.Log("Id de trivia en category " + item.category);
+            }
+
+            OnRankingLoaded?.Invoke(response.Models);
+        }
+    }
+
+    private async void HandleGameEnd(int points, int triviaId)
+    {       
+        var newRanking = new Ranking { points = points, trivia_id = triviaId };
+
+        var response = await clientSupabase.From<Ranking>().Insert(newRanking);
+
+        if (response != null)
+        {
+            Debug.Log("Puntaje guardado");
+        }
+        else
+        {
+            Debug.LogError("Error al guardar el puntaje");
+        }
+    }
+
+    private async void HandleSelectCategory(int index)
+    {
+        if (index == 0)
+        {
+           await LoadGeneralRanking();
+        }
+        else
+        {
+            var selectedTrivia = TriviaSelection.trivias[index - 1];
+            await LoadCategoryRanking(selectedTrivia.id);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        GameManager.OnGameEnd -= HandleGameEnd;
+        RankingSceneManager.OnSelectCategory -= HandleSelectCategory;
+    }
 }

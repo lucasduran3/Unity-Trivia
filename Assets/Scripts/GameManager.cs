@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -8,6 +9,8 @@ public class GameManager : MonoBehaviour
     //public TriviaManager triviaManager;
 
     public List<question> responseList; //lista donde guardo la respuesta de la query hecha en la pantalla de selección de categoría
+
+    public List<Ranking> rankingList;
 
     public int currentTriviaIndex = 0;
 
@@ -30,6 +33,8 @@ public class GameManager : MonoBehaviour
     private List<int> _usedQuestions = new List<int>();
 
     private TimerController _timerController;
+
+    public static event Action<int, int> OnGameEnd;
 
     public static GameManager Instance { get; private set; }
 
@@ -78,7 +83,7 @@ public class GameManager : MonoBehaviour
         {
             do
             {
-                randomQuestionIndex = Random.Range(0, responseList.Count);
+                randomQuestionIndex = UnityEngine.Random.Range(0, responseList.Count);
             }
             while (_usedQuestions.Contains(randomQuestionIndex));
 
@@ -122,15 +127,21 @@ public class GameManager : MonoBehaviour
         return _numQuestionAnswered == responseList.Count;
     }
     
-    public void EndGame(bool isWin)
+    public void EndGame(GameResult result)
     {
-        currentGameResult = isWin ? GameResult.Win : GameResult.Lose;
+        currentGameResult = result;
+        OnGameEnd?.Invoke(Points, currentTriviaIndex);
         StartScene("FinishGame");
     }
 
     public void StartScene(string sceneName)
     {
         SceneManager.LoadScene(sceneName);
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 
     public void DestroyInstance()
@@ -142,18 +153,16 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void CalculatePoints()
+    {
+        TimerController timerInstance = TimerController.Instance;
+        _points += timerInstance.Duration - timerInstance.Timer;
+    }
+
     //Properties
     public int Points
     {
         get => _points;
-        set => _points = value;
-    }
-
-    //enum
-    public enum GameResult
-    {
-        Win,
-        Lose
     }
 }
 

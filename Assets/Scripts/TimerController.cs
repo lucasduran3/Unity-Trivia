@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TimerController : MonoBehaviour
 {
-    [SerializeField] private float _duration = 10.0f;
+    [SerializeField] private int _duration = 10;
     private int _timer = 0;
     private Coroutine timerCoroutine;
 
@@ -42,14 +42,13 @@ public class TimerController : MonoBehaviour
     {
         Debug.Log("Se ejecuta el coroutine");
         _timer = 0;
-        while (_timer < _duration)
+        while (_timer <= _duration)
         {
             UIManagment.Instance.UpdateTimerText(_timer);
             yield return new WaitForSeconds(1);
             _timer++;
         }
-        Debug.Log("GAME OVER PAPA " + _timer);
-        UIManagment.Instance.UpdateTimerText(_timer);
+        GameManager.Instance.EndGame(GameResult.LOSE_BY_TIMER);
     }
 
     public void DestroyInstance()
@@ -61,5 +60,6 @@ public class TimerController : MonoBehaviour
         }
     }
 
-    public float Timer => _timer;
+    public int Timer => _timer;
+    public int Duration => _duration;
 }
