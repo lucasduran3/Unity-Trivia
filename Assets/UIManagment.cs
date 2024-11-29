@@ -47,17 +47,24 @@ public class UIManagment : MonoBehaviour
     private void Start()
     {
         queryCalled = false;
-
         _originalButtonColor = _buttons[0].GetComponent<Image>().color;
-
+        UpdateUI();
     }
 
     void Update()
     {
         _categoryText.text = PlayerPrefs.GetString("SelectedTrivia");
         _questionText.text = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].QuestionText;
-
         GameManager.Instance.CategoryAndQuestionQuery(queryCalled);
+
+
+    }
+
+    public void UpdateUI()
+    {
+        /*_categoryText.text = PlayerPrefs.GetString("SelectedTrivia");
+        _questionText.text = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].QuestionText;*/
+        //GameManager.Instance.CategoryAndQuestionQuery(queryCalled);
     }
     public void OnButtonClick(int buttonIndex)
     {
@@ -133,6 +140,7 @@ public class UIManagment : MonoBehaviour
     private void NextAnswer()
     {
         queryCalled = false;
+        UpdateUI();
         EnableButtons();
     }
 

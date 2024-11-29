@@ -1,6 +1,5 @@
 using Postgrest.Models;
 using Postgrest.Attributes;
-using Newtonsoft.Json;
 
 [Table("ranking")]
 public class Ranking : BaseModel
@@ -8,13 +7,13 @@ public class Ranking : BaseModel
     [PrimaryKey("id", false)]
     public int id { get; set; }
 
-    [JsonProperty("points")] // Coincide con el campo devuelto por la función
+    [Column("points")]
     public int points { get; set; }
 
-    [JsonProperty("trivia_id")] // Coincide con el campo devuelto por la función
+    [Column("trivia_id")]
     public int trivia_id { get; set; }
 
-    [JsonProperty("category")] // Campo adicional en la función
+    [Column("category")]
     public string category
     {
         get; set;

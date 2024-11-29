@@ -49,6 +49,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            //Instance = null;
             Destroy(gameObject);
         }
 
@@ -84,6 +85,12 @@ public class GameManager : MonoBehaviour
             do
             {
                 randomQuestionIndex = UnityEngine.Random.Range(0, responseList.Count);
+                if (responseList == null || responseList.Count == 0)
+                {
+                    Debug.LogError("responseList está vacío o no inicializado.");
+                    return;
+                }
+
             }
             while (_usedQuestions.Contains(randomQuestionIndex));
 
@@ -141,6 +148,7 @@ public class GameManager : MonoBehaviour
 
     public void ExitGame()
     {
+        Debug.Log(Time.realtimeSinceStartup);
         Application.Quit();
     }
 

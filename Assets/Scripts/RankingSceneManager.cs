@@ -49,7 +49,7 @@ public class RankingSceneManager : TriviaSelection
         {
             var rankingItem = Instantiate(_rankingItemPrefab, _rankingListParent);
             rankingItem.transform.Find("PointsText").GetComponent<TextMeshProUGUI>().text = $"Puntos: {ranking.points}";
-            rankingItem.transform.Find("CategoryText").GetComponent<TextMeshProUGUI>().text = $"Categoría: {trivias.Find(r=> r.id == ranking.trivia_id).category}";
+            rankingItem.transform.Find("CategoryText").GetComponent<TextMeshProUGUI>().text = $"Categoría: {trivias.Find(r => r.id == ranking.trivia_id).category}";
         }
     }
 

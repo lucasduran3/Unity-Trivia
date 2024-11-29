@@ -52,24 +52,38 @@ public class DatabaseManager : MonoBehaviour
 
     private async Task LoadGeneralRanking()
     {
-        try
-        {
-            var response = await clientSupabase.Postgrest.Rpc("get_general_ranking", null);
+        var rankingResponse = await clientSupabase
+            .From<Ranking>()
+            .Select("*")
+            .Get();
 
-            if (response != null && response.Content != null)
+        var triviasResponse = TriviaSelection.trivias;
+
+        if (triviasResponse != null && rankingResponse != null)
+        {
+            //Combinar los datos
+            var generalRanking = (from t in triviasResponse
+                                  join r in rankingResponse.Models
+                                  on t.id equals r.trivia_id
+                                  group r by new { t.id, t.category } into g
+                                  select new
+                                  {
+                                      trivia_id = g.Key.id,
+                                      category = g.Key.category,
+                                      points = g.Max(r => r.points) //Mayor puntaje por trivia
+                                  })
+                                  .OrderByDescending(r => r.points)
+                                  .ToList();
+
+            //  Convertir a Ranking
+            var rankings = generalRanking.Select(gr => new Ranking
             {
-                var rankings = JsonConvert.DeserializeObject<List<Ranking>>(response.Content);
-                OnRankingLoaded?.Invoke(rankings);
+                trivia_id = gr.trivia_id,
+                points = gr.points,
+                category = gr.category
+            }).ToList();
 
-                foreach (var item in rankings)
-                {
-                    Debug.Log("Id de trivia en general " + item.category);
-                }
-            }
-        }
-        catch (PostgrestException e)
-        {
-            Debug.LogError($"Error en LoadGeneralRanking: {e.Message}");
+            OnRankingLoaded?.Invoke(rankings);
         }
     }
 
@@ -109,15 +123,15 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    private async void HandleSelectCategory(int index)
+    private async void HandleSelectCategory(int trivia_id)
     {
-        if (index == 0)
+        if (trivia_id == 0)
         {
            await LoadGeneralRanking();
         }
         else
         {
-            var selectedTrivia = TriviaSelection.trivias[index - 1];
+            var selectedTrivia = TriviaSelection.trivias[trivia_id - 1];
             await LoadCategoryRanking(selectedTrivia.id);
         }
     }

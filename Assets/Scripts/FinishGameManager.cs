@@ -28,23 +28,16 @@ public class FinishGameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.DestroyInstance();
-        }
-        if (UIManagment.Instance != null)
-        {
-            UIManagment.Instance.DestroyInstance();
-        }
-        if (TimerController.Instance != null)
-        {
-            TimerController.Instance.DestroyInstance();
-        }
+        GameManager.Instance?.DestroyInstance();
+        UIManagment.Instance?.DestroyInstance();
+        TimerController.Instance?.DestroyInstance();
+
         SceneManager.LoadScene("MainMenu");
     }
 
     public void ExitGame()
     {
+        Debug.Log(Time.realtimeSinceStartup);
         Application.Quit();
     }
 }
