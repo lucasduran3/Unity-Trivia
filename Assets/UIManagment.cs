@@ -42,30 +42,28 @@ public class UIManagment : MonoBehaviour
             Destroy(gameObject);
         }
 
+        GameManager.OnQuestionQueryCalled += UpdateUI;
     }
 
     private void Start()
     {
         queryCalled = false;
         _originalButtonColor = _buttons[0].GetComponent<Image>().color;
-        UpdateUI();
     }
 
     void Update()
     {
-        _categoryText.text = PlayerPrefs.GetString("SelectedTrivia");
+        /*_categoryText.text = PlayerPrefs.GetString("SelectedTrivia");
         _questionText.text = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].QuestionText;
-        GameManager.Instance.CategoryAndQuestionQuery(queryCalled);
-
-
+        GameManager.Instance.CategoryAndQuestionQuery(queryCalled);*/
     }
 
     public void UpdateUI()
     {
-        /*_categoryText.text = PlayerPrefs.GetString("SelectedTrivia");
-        _questionText.text = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].QuestionText;*/
-        //GameManager.Instance.CategoryAndQuestionQuery(queryCalled);
+        _categoryText.text = PlayerPrefs.GetString("SelectedTrivia");
+        _questionText.text = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].QuestionText;
     }
+
     public void OnButtonClick(int buttonIndex)
     {
         TimerController.Instance.StopTimer();
@@ -98,7 +96,6 @@ public class UIManagment : MonoBehaviour
         }
 
         GameManager.Instance._numQuestionAnswered++;
-        Debug.Log(GameManager.Instance.Points);
     }
 
     public void UpdateTimerText(int second)
@@ -141,15 +138,8 @@ public class UIManagment : MonoBehaviour
     {
         queryCalled = false;
         UpdateUI();
+        GameManager.Instance.CategoryAndQuestionQuery(queryCalled);
         EnableButtons();
-    }
-
-    public void PreviousScene()
-    {
-        Destroy(GameManager.Instance);
-        Destroy(UIManagment.Instance);
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
     }
 
     public void DestroyInstance()
@@ -178,5 +168,10 @@ public class UIManagment : MonoBehaviour
         }
 
         return;
+    }
+
+    private void OnDestroy()
+    {
+        GameManager.OnQuestionQueryCalled -= UpdateUI;
     }
 }

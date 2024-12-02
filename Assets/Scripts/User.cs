@@ -1,15 +1,16 @@
 using Postgrest.Models;
 using Postgrest.Attributes;
-using System.Data.SqlTypes;
+using System;
 
+[Table("user")]
 public class User : BaseModel
 {
-    [Column("id"), PrimaryKey]
+    [PrimaryKey("id", false)]
     public int id { get; set; }
-
-    [Column("create_at")]
-    public SqlDateTime create_at { get; set; }
 
     [Column("usage_time")]
     public float usage_time { get; set; }
+
+    [Column("date")]
+    public DateTime date { get; set; }
 }

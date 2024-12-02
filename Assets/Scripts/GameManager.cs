@@ -22,6 +22,8 @@ public class GameManager : MonoBehaviour
 
     private int _points;
 
+    private string _currentQuestionText;
+
     private int _maxAttempts = 10;
 
     public int _numQuestionAnswered = 0;
@@ -34,10 +36,13 @@ public class GameManager : MonoBehaviour
 
     private TimerController _timerController;
 
-    public static event Action<int, int> OnGameEnd;
+    //public static event Action<int, int> OnGameEnd;
+
+    public static event Action OnQuestionQueryCalled;
+
+    public static event Action OnExitGame;
 
     public static GameManager Instance { get; private set; }
-
 
     void Awake()
     {
@@ -53,7 +58,9 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        _timerController = GameObject.FindWithTag("Timer").GetComponent<TimerController>();
+        //_timerController = GameObject.FindWithTag("Timer").GetComponent<TimerController>();
+
+        DatabaseManager.OnTriviaDataLoaded += CategoryAndQuestionQuery;
     }
 
     void Start()
@@ -78,6 +85,7 @@ public class GameManager : MonoBehaviour
 
     public void CategoryAndQuestionQuery(bool isCalled)
     {
+        
         isCalled = UIManagment.Instance.queryCalled;
 
         if (!isCalled)
@@ -85,18 +93,21 @@ public class GameManager : MonoBehaviour
             do
             {
                 randomQuestionIndex = UnityEngine.Random.Range(0, responseList.Count);
-                if (responseList == null || responseList.Count == 0)
-                {
-                    Debug.LogError("responseList está vacío o no inicializado.");
-                    return;
-                }
-
             }
             while (_usedQuestions.Contains(randomQuestionIndex));
+
+            if (_usedQuestions.Count >= responseList.Count)
+            {
+                Debug.LogWarning("Todas las preguntas ya fueron usadas.");
+                return;
+            }
 
             _usedQuestions.Add(randomQuestionIndex);
             // Obtén el índice original de la respuesta correcta
             int correctIndex = int.Parse(responseList[randomQuestionIndex].CorrectOption);
+
+            _currentQuestionText = responseList[randomQuestionIndex].QuestionText;
+            OnQuestionQueryCalled?.Invoke();
 
             // Limpia respuestas anteriores
             _answers.Clear();
@@ -124,9 +135,18 @@ public class GameManager : MonoBehaviour
                 UIManagment.Instance._buttons[i].onClick.RemoveAllListeners(); // Limpia listeners anteriores
                 UIManagment.Instance._buttons[i].onClick.AddListener(() => UIManagment.Instance.OnButtonClick(index));
             }
-            _timerController.StartTimer();
+            InitTimer();
             UIManagment.Instance.queryCalled = true;
         } 
+    }
+
+    private void InitTimer()
+    {
+        if (_timerController == null)
+        {
+            _timerController = GameObject.FindWithTag("Timer").GetComponent<TimerController>();
+        }
+        _timerController.StartTimer();
     }
 
     public bool AllQuestionsAnswered()
@@ -137,7 +157,7 @@ public class GameManager : MonoBehaviour
     public void EndGame(GameResult result)
     {
         currentGameResult = result;
-        OnGameEnd?.Invoke(Points, currentTriviaIndex);
+        //OnGameEnd?.Invoke(Points, currentTriviaIndex);
         StartScene("FinishGame");
     }
 
@@ -148,8 +168,7 @@ public class GameManager : MonoBehaviour
 
     public void ExitGame()
     {
-        Debug.Log(Time.realtimeSinceStartup);
-        Application.Quit();
+        OnExitGame?.Invoke();
     }
 
     public void DestroyInstance()
@@ -164,7 +183,7 @@ public class GameManager : MonoBehaviour
     public void CalculatePoints()
     {
         TimerController timerInstance = TimerController.Instance;
-        _points += timerInstance.Duration - timerInstance.Timer;
+        _points += 10 - timerInstance.TimeToRespond;
     }
 
     //Properties
@@ -172,5 +191,7 @@ public class GameManager : MonoBehaviour
     {
         get => _points;
     }
+
+    public string CurrentQuestionText => _currentQuestionText;
 }
 
