@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class FinishGameManager : MonoBehaviour
 {
+    #region Variables
     [SerializeField] private TextMeshProUGUI _resultText;
     [SerializeField] private TextMeshProUGUI _pointsText;
     [SerializeField] private TextMeshProUGUI _positionText;
@@ -15,11 +14,16 @@ public class FinishGameManager : MonoBehaviour
     [SerializeField] private TMP_Dropdown _categoryDropdown;
 
     private UserRankingData _rankingData;
-    public static event Action<int, int> OnGameEnd;
 
+    public static event Action<int, int> OnGameEnd;
+    #endregion
+
+    #region Methods
+    #region Built in Methods
     private void Start()
     {
         DatabaseManager.OnUserRankingDataLoaded += DisplayUserRanking;
+
         UIManagment.Instance?.DestroyInstance();
         TimerController.Instance?.DestroyInstance();
 
@@ -48,6 +52,13 @@ public class FinishGameManager : MonoBehaviour
         OnGameEnd?.Invoke(GameManager.Instance.Points, GameManager.Instance.currentTriviaIndex);
     }
 
+    private void OnDestroy()
+    {
+        DatabaseManager.OnUserRankingDataLoaded -= DisplayUserRanking;
+    }
+    #endregion
+
+    #region Custom Methods
     private void PopulateDropDown()
     {
         _categoryDropdown.ClearOptions();
@@ -76,7 +87,7 @@ public class FinishGameManager : MonoBehaviour
         }
         else
         {
-            _positionText.text = $"Posición en el ranking {_rankingData.TriviaPosition}°";
+            _positionText.text = $"Posición en el ranking: {_rankingData.TriviaPosition}°";
         }
     }
 
@@ -105,9 +116,6 @@ public class FinishGameManager : MonoBehaviour
             rankingItem.transform.Find("CategoryText").GetComponent<TextMeshProUGUI>().text = $"{item.category}";
         }
     }
-
-    private void OnDestroy()
-    {
-        DatabaseManager.OnUserRankingDataLoaded -= DisplayUserRanking;
-    }
+    #endregion
+    #endregion
 }

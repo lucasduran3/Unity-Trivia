@@ -1,34 +1,34 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class UIManagment : MonoBehaviour
-{ 
+{
+    #region Variables
+    [Header("UI Elements")]
     [SerializeField] TextMeshProUGUI _categoryText;
     [SerializeField] TextMeshProUGUI _questionText;
     [SerializeField] TextMeshProUGUI _timerText;
     [SerializeField] TextMeshProUGUI _pointsText;
-    
-    string _correctAnswer;
-
     public Button[] _buttons = new Button[3];
-
     [SerializeField] Button _backButton;
 
-    private List<string> _answers = new List<string>();
+    [Space]
 
+    [Header("Data")]
     public bool queryCalled;
-
-    private Color _originalButtonColor;
-
+    string _correctAnswer;
     private bool _isCorrectSelection;
 
+    private List<string> _answers = new List<string>();
+    private Color _originalButtonColor;
+   
     public static UIManagment Instance { get; private set; }
+    #endregion
 
-
+    #region Methods
+    #region Built in Methods
     void Awake()
     {
         // Configura la instancia
@@ -51,13 +51,13 @@ public class UIManagment : MonoBehaviour
         _originalButtonColor = _buttons[0].GetComponent<Image>().color;
     }
 
-    void Update()
+    private void OnDestroy()
     {
-        /*_categoryText.text = PlayerPrefs.GetString("SelectedTrivia");
-        _questionText.text = GameManager.Instance.responseList[GameManager.Instance.randomQuestionIndex].QuestionText;
-        GameManager.Instance.CategoryAndQuestionQuery(queryCalled);*/
+        GameManager.OnQuestionQueryCalled -= UpdateUI;
     }
+    #endregion
 
+    #region Custom Methods
     public void UpdateUI()
     {
         _categoryText.text = PlayerPrefs.GetString("SelectedTrivia");
@@ -78,8 +78,6 @@ public class UIManagment : MonoBehaviour
             DisableButtons();
             GameManager.Instance.CalculatePoints();
             UpdatePointsText();
-            //setear UI puntos
-
             ChangeButtonColor(buttonIndex, Color.green);
             Invoke("RestoreButtonColor", 2f);
             GameManager.Instance._answers.Clear();
@@ -138,7 +136,7 @@ public class UIManagment : MonoBehaviour
     {
         queryCalled = false;
         UpdateUI();
-        GameManager.Instance.CategoryAndQuestionQuery(queryCalled);
+        GameManager.Instance.CategoryAndQuestionQuery();
         EnableButtons();
     }
 
@@ -169,9 +167,6 @@ public class UIManagment : MonoBehaviour
 
         return;
     }
-
-    private void OnDestroy()
-    {
-        GameManager.OnQuestionQueryCalled -= UpdateUI;
-    }
+    #endregion
+    #endregion
 }

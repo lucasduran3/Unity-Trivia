@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class LoginSceneManager : MonoBehaviour
 {
+    #region Variables
     [SerializeField] private DatabaseManager _dbManager;
     [SerializeField] private TMP_InputField _emailInput;
     [SerializeField] private TMP_InputField _passwordInput;
@@ -15,8 +16,10 @@ public class LoginSceneManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _errorText;
 
     [SerializeField] private SupabaseClientData _client;
-    //[SerializeField] private TMP_InputField _usernameInput;
+    #endregion
 
+    #region Methods
+    #region Built in Methods
     private void Awake()
     {
         _client.ResetClient();
@@ -29,11 +32,16 @@ public class LoginSceneManager : MonoBehaviour
         _dropdown.value = 0;
     }
 
+    private void OnDestroy()
+    {
+        DatabaseManager.OnAuthError -= DisplayErrorMessage;
+    }
+    #endregion
+    #region Custom Methods
     public void OnLoginButtonPress()
     {
         if (_dropdown.value == 0)
         {
-            //Logearse
             _dbManager.SignInWithEmail(_emailInput.text, _passwordInput.text);
         }
         else
@@ -73,10 +81,15 @@ public class LoginSceneManager : MonoBehaviour
         {
             _errorText.text = "Este usuario ya está registrado. Selecciona Iniciar Sesión";
         }
+        if (message.Contains("validation_failed"))
+        {
+            _errorText.text = "Formato de email invalido.";
+        }
+        if (message.Contains("weak_password"))
+        {
+            _errorText.text = "La contraseña debe tener almenos 6 carácteres.";
+        }
     }
-
-    private void OnDestroy()
-    {
-        DatabaseManager.OnAuthError -= DisplayErrorMessage;
-    }
+    #endregion
+    #endregion
 }

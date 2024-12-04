@@ -7,16 +7,36 @@ using UnityEngine.SceneManagement;
 
 public class RankingSceneManager : TriviaSelection
 {
+    #region Variables
+    [SerializeField] private TextMeshProUGUI m_userRankingTxt;
     [SerializeField] private Transform _rankingListParent;
     [SerializeField] private GameObject _rankingItemPrefab;
 
+    #region Events
     public static event Action<int> OnSelectCategory;
+    public static event Action OnRankingSceneStart;
+    #endregion
+    #endregion
 
+    #region Methods
+    #region Build in Methods
     protected override void Start()
     {
         base.Start();
         DatabaseManager.OnRankingLoaded += DisplayRanking;
+        DatabaseManager.OnUserRankingLoaded += DisplayUserRanking;
+
+        OnRankingSceneStart?.Invoke();
     }
+
+    private void OnDestroy()
+    {
+        DatabaseManager.OnRankingLoaded -= DisplayRanking;
+        DatabaseManager.OnUserRankingLoaded -= DisplayUserRanking;
+    }
+    #endregion
+
+    #region Custom Methods
     protected override void PopulateDropdown()
     {
         _dropdown.ClearOptions();
@@ -55,8 +75,14 @@ public class RankingSceneManager : TriviaSelection
         }
     }
 
-    private void OnDestroy()
+    private void DisplayUserRanking(List<Ranking> userRanking)
     {
-        DatabaseManager.OnRankingLoaded -= DisplayRanking;
+        m_userRankingTxt.text = "";
+        foreach (var ranking in userRanking)
+        {
+            m_userRankingTxt.text += $"\n{ranking.category}: {ranking.points}";
+        }
     }
+    #endregion
+    #endregion
 }

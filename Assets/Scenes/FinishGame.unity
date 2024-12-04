@@ -795,6 +795,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SceneManager
       objectReference: {fileID: 0}
+    - target: {fileID: 8853491689426555556, guid: c6549afab41964c46adf551ad4f026fd, type: 3}
+      propertyPath: databaseManager
+      value: 
+      objectReference: {fileID: 881265979}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -855,8 +859,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa50484a9aa77a94f947ab4e232b96d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  supabaseClientData: {fileID: 11400000, guid: 3222e900271761b41a1405a94c6ccf7b, type: 2}
   index: 0
+  supabaseClientData: {fileID: 11400000, guid: 3222e900271761b41a1405a94c6ccf7b, type: 2}
 --- !u!1 &897331393
 GameObject:
   m_ObjectHideFlags: 0
@@ -2336,7 +2340,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -13.4857}
+  m_AnchoredPosition: {x: 0, y: 50.339}
   m_SizeDelta: {x: 0, y: 46.9715}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3634839195433119026
@@ -3038,8 +3042,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3939763194537146889}
   m_HandleRect: {fileID: 7388861267045259134}
   m_Direction: 2
-  m_Value: 0
-  m_Size: 0.81036043
+  m_Value: 1
+  m_Size: 0.99998987
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3675,7 +3679,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 28}
+  m_SizeDelta: {x: 0, y: 147.65}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &8326266315426590146
 GameObject:
