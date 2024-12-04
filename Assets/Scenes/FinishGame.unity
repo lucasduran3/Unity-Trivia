@@ -855,6 +855,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa50484a9aa77a94f947ab4e232b96d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  supabaseClientData: {fileID: 11400000, guid: 3222e900271761b41a1405a94c6ccf7b, type: 2}
   index: 0
 --- !u!1 &897331393
 GameObject:
@@ -3038,7 +3039,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 7388861267045259134}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.81036043
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

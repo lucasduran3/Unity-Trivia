@@ -5,7 +5,7 @@ using Postgrest.Attributes;
 public class Ranking : BaseModel
 {
     [PrimaryKey("id", false)]
-    public int id { get; set; }
+    public string id { get; set; }
 
     [Column("points")]
     public int points { get; set; }
@@ -18,5 +18,8 @@ public class Ranking : BaseModel
     {
         get; set;
     }
+
+    [Column("user_id")]
+    public string user_id { get; set; }
 
 }

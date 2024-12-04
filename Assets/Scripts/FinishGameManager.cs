@@ -36,7 +36,7 @@ public class FinishGameManager : MonoBehaviour
                 break;
 
             case GameResult.LOSE_BY_TIMER:
-                _resultText.text = "¡Se termino el timepo!";
+                _resultText.text = "¡Se termino el tiempo!";
                 break;
         }
 

@@ -10,17 +10,22 @@ using Postgrest.Responses;
 using System;
 using Newtonsoft.Json;
 using Postgrest.Exceptions;
+using Supabase.Gotrue.Exceptions;
+using System.ComponentModel;
 
 public class DatabaseManager : MonoBehaviour
 {
     string supabaseUrl = "https://iwdrxfxeosvebxwayxfh.supabase.co"; //COMPLETAR
     string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZHJ4Znhlb3N2ZWJ4d2F5eGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyMjE1MDEsImV4cCI6MjA0Nzc5NzUwMX0.l_3eGWD_kVqEd8E64f9kArIEsedViSiw5Q1hc6NpKZ4"; //COMPLETAR
 
-    Supabase.Client clientSupabase;
+    [SerializeField] SupabaseClientData supabaseClientData;
+
+    //Supabase.Client clientSupabase;
 
     public static event Action<List<Ranking>> OnRankingLoaded;
     public static event Action<bool> OnTriviaDataLoaded;
     public static event Action<UserRankingData> OnUserRankingDataLoaded;
+    public static event Action<string> OnAuthError;
 
     public int index;
 
@@ -30,7 +35,10 @@ public class DatabaseManager : MonoBehaviour
     }
     async void Start()
     {
-        clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
+        if (supabaseClientData.Client == null)
+        {
+            supabaseClientData.Client = new Supabase.Client(supabaseUrl, supabaseKey);
+        }
 
         index = PlayerPrefs.GetInt("SelectedIndex");
         GameManager.OnExitGame += HandleExitGame;
@@ -41,7 +49,7 @@ public class DatabaseManager : MonoBehaviour
 
     async Task LoadTriviaData(int index)
     {
-        var response = await clientSupabase
+        var response = await supabaseClientData.Client
             .From<question>()
             .Where(question => question.trivia_id == index)
             .Select("id, question, answer1, answer2, answer3, correct_answer, trivia_id, trivia(id, category)")
@@ -63,7 +71,7 @@ public class DatabaseManager : MonoBehaviour
 
 private async Task<List<Ranking>> LoadGeneralRanking()
 {
-    var rankingResponse = await clientSupabase
+    var rankingResponse = await supabaseClientData.Client
         .From<Ranking>()
         .Select("*")
         .Get();
@@ -86,7 +94,6 @@ private async Task<List<Ranking>> LoadGeneralRanking()
                               .OrderByDescending(r => r.points)
                               .ToList();
 
-        // Convertir a Ranking y eliminar duplicados por puntos
         var rankings = generalRanking
             .Select(gr => new Ranking
             {
@@ -94,8 +101,6 @@ private async Task<List<Ranking>> LoadGeneralRanking()
                 points = gr.points,
                 category = gr.category
             })
-            .GroupBy(r => r.points) // Agrupar por puntos
-            .Select(g => g.First()) // Seleccionar el primer elemento único
             .OrderByDescending(r => r.points) // Ordenar nuevamente por puntos
             .ToList();
 
@@ -108,7 +113,7 @@ private async Task<List<Ranking>> LoadGeneralRanking()
 
     private async Task<List<Ranking>> LoadCategoryRanking(int triviaId)
     {
-        var response = await clientSupabase
+        var response = await supabaseClientData.Client
             .From<Ranking>()
             .Where(r => r.trivia_id == triviaId)
             .Order("points", Postgrest.Constants.Ordering.Descending, Postgrest.Constants.NullPosition.First)
@@ -194,7 +199,6 @@ private async Task<List<Ranking>> LoadGeneralRanking()
         return position;
     }
 
-
     private async void HandleExitGame()
     {
         await SaveUsageTime();
@@ -204,12 +208,14 @@ private async Task<List<Ranking>> LoadGeneralRanking()
     {
         try
         {
-            var newUserEntry = new User
+
+            var newTimeEntry = new TimeModel
             {
                 usage_time = Time.realtimeSinceStartup,
-                date = DateTime.UtcNow
+                date = DateTime.UtcNow, 
+                user_id = supabaseClientData.Client.Auth.CurrentUser.Id,
             };
-            var response = await clientSupabase.From<User>().Insert(newUserEntry);
+            var response = await supabaseClientData.Client.From<TimeModel>().Insert(newTimeEntry);
             if (response != null)
             {
                 Debug.Log("Tiempo de uso guardado correctamente");
@@ -232,17 +238,56 @@ private async Task<List<Ranking>> LoadGeneralRanking()
         Debug.Log("SaveRankingData");
         try
         {
-            var newRanking = new Ranking { points = points, trivia_id = triviaId };
+            var userId = supabaseClientData.Client.Auth.CurrentUser.Id;
 
-            var response = await clientSupabase.From<Ranking>().Insert(newRanking);
+            // Buscar si existe una fila con el mismo user_id y trivia_id
+            var existingRankingResponse = await supabaseClientData.Client
+                .From<Ranking>()
+                .Where(r => r.user_id == userId && r.trivia_id == triviaId)
+                .Get();
 
-            if (response != null)
+            if (existingRankingResponse.Models.Any())
             {
-                Debug.Log("Puntaje guardado");
+                // Actualizar la fila existente
+                var existingRanking = existingRankingResponse.Models.First();
+                existingRanking.points = points; // Actualizar el valor de points
+
+                var updateResponse = await supabaseClientData.Client
+                    .From<Ranking>()
+                    .Update(existingRanking);
+
+                if (updateResponse != null)
+                {
+                    Debug.Log("Puntaje actualizado correctamente.");
+                }
+                else
+                {
+                    Debug.LogError("Error al actualizar el puntaje - response null.");
+                }
             }
             else
             {
-                Debug.LogError("Error al guardar el puntaje - response null");
+                // Insertar una nueva fila
+                var newRanking = new Ranking
+                {
+                    points = points,
+                    trivia_id = triviaId,
+                    category = TriviaSelection.trivias[GameManager.Instance.currentTriviaIndex - 1].category,
+                    user_id = userId
+                };
+
+                var insertResponse = await supabaseClientData.Client
+                    .From<Ranking>()
+                    .Insert(newRanking);
+
+                if (insertResponse != null)
+                {
+                    Debug.Log("Puntaje guardado correctamente.");
+                }
+                else
+                {
+                    Debug.LogError("Error al guardar el puntaje - response null.");
+                }
             }
         }
         catch (Exception ex)
@@ -269,6 +314,41 @@ private async Task<List<Ranking>> LoadGeneralRanking()
             await LoadCategoryRanking(selectedTrivia.id);
         }
     }
+
+
+    #region Auth
+    public async void SignInWithEmail(string email, string password)
+    {
+        try
+        {
+            var session = await supabaseClientData.Client.Auth.SignIn(email, password);
+            GameManager.Instance.StartScene("MainMenu");
+        }
+        catch (GotrueException ex)
+        {       
+            Debug.LogError("Error en sign in " + ex.Message);
+            OnAuthError?.Invoke(ex.Message);
+        }
+    }
+
+    public async void SignUpWithEmail(string username, string email, string password)
+    {
+        try
+        {
+            var session = await supabaseClientData.Client.Auth.SignUp(email, password);
+            if (session != null)
+            {
+                session.User.UserMetadata.Add("username", username);
+                GameManager.Instance.StartScene("MainMenu");
+            }
+        }
+        catch (GotrueException ex)
+        {
+            Debug.LogError("Error en sign up " + ex.Message);
+            OnAuthError?.Invoke(ex.Message);
+        }
+    }
+    #endregion
 
     private void OnDestroy()
     {

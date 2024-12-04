@@ -783,6 +783,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa50484a9aa77a94f947ab4e232b96d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  supabaseClientData: {fileID: 11400000, guid: 3222e900271761b41a1405a94c6ccf7b, type: 2}
   index: 0
 --- !u!1 &1687873083
 GameObject:

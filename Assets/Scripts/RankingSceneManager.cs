@@ -50,7 +50,8 @@ public class RankingSceneManager : TriviaSelection
         {
             var rankingItem = Instantiate(_rankingItemPrefab, _rankingListParent);
             rankingItem.transform.Find("PointsText").GetComponent<TextMeshProUGUI>().text = $"{ranking.points}";
-            rankingItem.transform.Find("CategoryText").GetComponent<TextMeshProUGUI>().text = $"{trivias.Find(r => r.id == ranking.trivia_id).category}";
+            //rankingItem.transform.Find("CategoryText").GetComponent<TextMeshProUGUI>().text = $"{trivias.Find(r => r.id == ranking.trivia_id).category}";
+            rankingItem.transform.Find("CategoryText").GetComponent<TextMeshProUGUI>().text = $"{ranking.category}";
         }
     }
 

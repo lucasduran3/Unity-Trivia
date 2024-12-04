@@ -74,13 +74,17 @@ public class GameManager : MonoBehaviour
 
     void StartTrivia()
     {
-        // Cargar la trivia desde la base de datos
-        //triviaManager.LoadTrivia(currentTriviaIndex);
-
-        //print(responseList.Count);
         _points = 0;
         _numQuestionAnswered = 0;
         _usedQuestions.Clear();
+        _answers.Clear();
+        currentTriviaIndex = 0;
+        randomQuestionIndex = 0;
+        queryCalled = false;
+
+        // Si necesitas reiniciar la lista de respuestas cargadas desde la base de datos
+        responseList = new List<question>();
+
     }
 
     public void CategoryAndQuestionQuery(bool isCalled)
@@ -190,6 +194,10 @@ public class GameManager : MonoBehaviour
     public int Points
     {
         get => _points;
+    }
+    void OnDestroy()
+    {
+        DatabaseManager.OnTriviaDataLoaded -= CategoryAndQuestionQuery;
     }
 
     public string CurrentQuestionText => _currentQuestionText;
