@@ -6,23 +6,20 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    //public TriviaManager triviaManager;
-
+    #region Variables
     public List<question> responseList; //lista donde guardo la respuesta de la query hecha en la pantalla de selección de categoría
 
-    public List<Ranking> rankingList;
+    public List<string> _answers;
 
     public int currentTriviaIndex = 0;
 
     public int randomQuestionIndex = 0;
 
-    public List<string> _answers = new List<string>();
-
     public bool queryCalled;
 
     private int _points;
 
-    private int _maxAttempts = 10;
+    private string _currentQuestionText;
 
     public int _numQuestionAnswered = 0;
 
@@ -34,25 +31,29 @@ public class GameManager : MonoBehaviour
 
     private TimerController _timerController;
 
-    public static event Action<int, int> OnGameEnd;
+    #region Events
+    public static event Action OnQuestionQueryCalled;
+    public static event Action OnExitGame;
+    #endregion
 
     public static GameManager Instance { get; private set; }
+    #endregion
 
-
+    #region Methods
+    #region Built in Methods
     void Awake()
     {
-        // Configura la instancia
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Para mantener el objeto entre escenas
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
             Destroy(gameObject);
         }
 
-        _timerController = GameObject.FindWithTag("Timer").GetComponent<TimerController>();
+        DatabaseManager.OnTriviaDataLoaded += CategoryAndQuestionQuery;
     }
 
     void Start()
@@ -64,20 +65,29 @@ public class GameManager : MonoBehaviour
 
     }
 
-    void StartTrivia()
+    void OnDestroy()
     {
-        // Cargar la trivia desde la base de datos
-        //triviaManager.LoadTrivia(currentTriviaIndex);
+        DatabaseManager.OnTriviaDataLoaded -= CategoryAndQuestionQuery;
+    }
+    #endregion
 
-        //print(responseList.Count);
+    #region Custom Methods
+    public void StartTrivia()
+    {
         _points = 0;
         _numQuestionAnswered = 0;
         _usedQuestions.Clear();
+        _answers.Clear();
+        currentTriviaIndex = 0;
+        randomQuestionIndex = 0;
+        queryCalled = false;
+
+        responseList = new List<question>();
     }
 
-    public void CategoryAndQuestionQuery(bool isCalled)
+    public void CategoryAndQuestionQuery()
     {
-        isCalled = UIManagment.Instance.queryCalled;
+        bool isCalled = UIManagment.Instance.queryCalled;
 
         if (!isCalled)
         {
@@ -87,50 +97,73 @@ public class GameManager : MonoBehaviour
             }
             while (_usedQuestions.Contains(randomQuestionIndex));
 
+            if (_usedQuestions.Count >= responseList.Count)
+            {
+                Debug.LogError("Se usaron todas las preguntas");
+                return;
+            }
+
             _usedQuestions.Add(randomQuestionIndex);
-            // Obtén el índice original de la respuesta correcta
+            //Obtener indice de la respuesta correcta
             int correctIndex = int.Parse(responseList[randomQuestionIndex].CorrectOption);
 
-            // Limpia respuestas anteriores
+            _currentQuestionText = responseList[randomQuestionIndex].QuestionText;
+
+            //Actualizar UI preguntas - UIManagment
+            OnQuestionQueryCalled?.Invoke();
+
             _answers.Clear();
 
-            // Agrega respuestas en orden original
             _answers.Add(responseList[randomQuestionIndex].Answer1);
             _answers.Add(responseList[randomQuestionIndex].Answer2);
             _answers.Add(responseList[randomQuestionIndex].Answer3);
 
-            // Guarda el texto de la respuesta correcta antes de mezclar
+            //Guarda el texto de la respuesta correcta antes de mezclar
             string correctAnswerText = _answers[correctIndex - 1]; // -1 porque los índices de CorrectOption son 1-based
 
-            // Mezcla las respuestas
             _answers.Shuffle();
 
-            // Actualiza el texto de la respuesta correcta después de mezclar
+            //Actualiza el texto de la respuesta correcta después de mezclar
             _correctAnswer = correctAnswerText;
 
-            // Asigna las respuestas mezcladas a los botones
             for (int i = 0; i < UIManagment.Instance._buttons.Length; i++)
             {
                 UIManagment.Instance._buttons[i].GetComponentInChildren<TextMeshProUGUI>().text = _answers[i];
 
-                int index = i; // Captura el índice local
-                UIManagment.Instance._buttons[i].onClick.RemoveAllListeners(); // Limpia listeners anteriores
+                int index = i;
+                UIManagment.Instance._buttons[i].onClick.RemoveAllListeners();
                 UIManagment.Instance._buttons[i].onClick.AddListener(() => UIManagment.Instance.OnButtonClick(index));
             }
-            _timerController.StartTimer();
+
+            InitTimer();
             UIManagment.Instance.queryCalled = true;
         } 
+    }
+
+    private void InitTimer()
+    {
+        //fix instancia singleton no inicializada
+        if (_timerController == null)
+        {
+            _timerController = GameObject.FindWithTag("Timer").GetComponent<TimerController>();
+        }
+        _timerController.StartTimer();
     }
 
     public bool AllQuestionsAnswered()
     {
         return _numQuestionAnswered == responseList.Count;
     }
-    
+
+    public void CalculatePoints()
+    {
+        TimerController timerInstance = TimerController.Instance;
+        _points += 10 - timerInstance.TimeToRespond;
+    }
+
     public void EndGame(GameResult result)
     {
         currentGameResult = result;
-        OnGameEnd?.Invoke(Points, currentTriviaIndex);
         StartScene("FinishGame");
     }
 
@@ -141,7 +174,8 @@ public class GameManager : MonoBehaviour
 
     public void ExitGame()
     {
-        Application.Quit();
+        //Guardar tiempo de uso y cerrar aplicación - DbManager
+        OnExitGame?.Invoke();
     }
 
     public void DestroyInstance()
@@ -152,17 +186,12 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    #endregion
+    #endregion
 
-    public void CalculatePoints()
-    {
-        TimerController timerInstance = TimerController.Instance;
-        _points += timerInstance.Duration - timerInstance.Timer;
-    }
-
-    //Properties
-    public int Points
-    {
-        get => _points;
-    }
+    #region Properties
+    public int Points => _points;
+    public string CurrentQuestionText => _currentQuestionText;
+    #endregion
 }
 
